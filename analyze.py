@@ -5,6 +5,7 @@ import os
 import gender_guesser.detector as gender
 import time
 from multiprocessing import Pool
+import random
 
 
 def divide_chunks(l, n):
@@ -25,13 +26,12 @@ def clean_author_data(authors):
 def process_data(data):
     out_list = []
     for datum in data:
-        #name_list = []
-        authors = json.loads(clean_author_data(datum))
-        datum = datum.split('\t')
-        for author in authors:
-            #name_list.append({'first': author['given'], 'last': author['family']})
-            out_list.append({'doi': datum[0], 'first': author['given'], 'last': author['family'], 'sup': datum[2], 'men': datum[3], 'con': datum[4], 'tot': datum[5][:-1]})
-
+        authors = clean_author_data(datum)
+        if len(authors) > 2:
+            authors = json.loads(authors)
+            datum = datum.split('\t')
+            for author in authors:
+                out_list.append({'doi': datum[0], 'first': author['given'], 'last': author['family'], 'sup': datum[2], 'men': datum[3], 'con': datum[4], 'tot': datum[5][:-1]})
     return out_list
 
 
@@ -57,6 +57,8 @@ def process(file):
     list_processed = process_data(data)
 
     author_df = pd.DataFrame.from_dict(list_processed)
+
+    print("Getting names...")
 
     eth_df = pred_wiki_name(author_df,'last', 'first', conf_int=0.9)
 
@@ -89,14 +91,15 @@ def process(file):
         eth_sex_summary.append({'doi': unique_doi[1:-1], 'auth_number': auth_number,
                                 'eth_count': eth_count, 'sex_count': sex_count,
                                 'sup': sup, 'men': men, 'con': con, 'tot': tot})
-    
+
         with open('output/' + file, 'a') as o:
             for record in eth_sex_summary:
                 o.write(record['doi'] + '\t' + str(record['auth_number']) + '\t' +
                         str(record['eth_count']) + '\t' + str(record['sex_count']) + '\t' +
                         str(record['sup']) + '\t' + str(record['men']) + '\t' +
                         str(record['con']) + '\t' + str(record['tot']) + '\n')
-
+        
+    os.remove("/mnt/c/Users/sean/Documents/author_tallies/" + file)
 
     end = time.time()
     print(end-start)
@@ -106,9 +109,18 @@ dir_list = []
 for file in os.listdir(directory):
     dir_list.append(file)
 
-n = 270
+random.shuffle(dir_list)
+
+process_multiple(dir_list)
+
+
+"""
+n = 5
 
 x = list(divide_chunks(dir_list, n))
 
 with Pool(n) as p:
     p.map(process_multiple, x)
+    time.sleep(20)
+
+"""
