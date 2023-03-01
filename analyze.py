@@ -91,13 +91,16 @@ def process(file):
         eth_sex_summary.append({'doi': unique_doi[1:-1], 'auth_number': auth_number,
                                 'eth_count': eth_count, 'sex_count': sex_count,
                                 'sup': sup, 'men': men, 'con': con, 'tot': tot})
+        
+        write_record = ""
+        for record in eth_sex_summary:
+            write_record = (write_record + record['doi'] + '\t' + str(record['auth_number']) + '\t' +
+                            str(record['eth_count']) + '\t' + str(record['sex_count']) + '\t' +
+                            str(record['sup']) + '\t' + str(record['men']) + '\t' +
+                            str(record['con']) + '\t' + str(record['tot']) + '\n')
 
         with open('output/' + file, 'a') as o:
-            for record in eth_sex_summary:
-                o.write(record['doi'] + '\t' + str(record['auth_number']) + '\t' +
-                        str(record['eth_count']) + '\t' + str(record['sex_count']) + '\t' +
-                        str(record['sup']) + '\t' + str(record['men']) + '\t' +
-                        str(record['con']) + '\t' + str(record['tot']) + '\n')
+            o.write(write_record)
         
     os.remove("/mnt/c/Users/sean/Documents/author_tallies/" + file)
 
